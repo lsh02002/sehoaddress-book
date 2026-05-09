@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 16,
+    paddingBottom: 100,
   },
 
   searchInput: {
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   floatingButton: {
     position: "absolute",
     right: 20,
-    bottom: 20,
+    bottom: 70,
     width: 64,
     height: 64,
     borderRadius: 32,
