@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   View,
-  TextInput,
   TouchableOpacity,
   Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   Alert,
 } from "react-native";
 
@@ -14,7 +13,12 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 
 import { RootStackParamList } from "../../App";
-import { ContactRepository } from "../repositories/ContactRepository";
+import { ContactRepository } from "../repositories/contact/ContactRepository";
+import { TwoDiv } from "../form/input/TwoDiv";
+import SelectInput, { Option } from "../form/input/SelectInput";
+import { Address, Email, Phone } from "../domain/Contact";
+import SelectArrayInput from "../form/input/SelectArrayInput";
+import TextInput from "../form/input/TextInput";
 
 type RouteProps = RouteProp<RootStackParamList, "ContactForm">;
 
@@ -34,9 +38,15 @@ export function ContactFormScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
-  const [tags, setTags] = useState("");
-  const [groups, setGroups] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [groups, setGroups] = useState<string[]>([]);
   const [memo, setMemo] = useState("");
+
+  const [phoneOptions, setPhoneOptions] = useState<Option[]>([]);
+  const [emailOptions, setEmailOptions] = useState<Option[]>([]);
+  const [addressOptions, setAddressOptions] = useState<Option[]>([]);
+  const [tagOptions, setTagOptions] = useState<Option[]>([]);
+  const [groupOptions, setGroupOptions] = useState<Option[]>([]);
 
   useEffect(() => {
     if (contactId) {
@@ -56,8 +66,34 @@ export function ContactFormScreen() {
     setPhone(contact.phones[0]?.phoneNumber || "");
     setEmail(contact.emails[0]?.emailAddress || "");
     setAddress(contact.addresses[0]?.addressLine1 || "");
-    setTags(contact.tags.join(", "));
-    setGroups(contact.groups.join(", "));
+    setTags(contact.tags);
+    setGroups(contact.groups);
+    setMemo(contact.memo ?? "");
+
+    setPhoneOptions(
+      contact.phones.map((phone: Phone) => ({
+        label: phone.phoneNumber,
+        value: phone.phoneNumber,
+      })),
+    );
+    setEmailOptions(
+      contact.emails.map((email: Email) => ({
+        label: email.emailAddress,
+        value: email.emailAddress,
+      })),
+    );
+    setAddressOptions(
+      contact.addresses.map((address: Address) => ({
+        label: address.addressLine1 ?? "",
+        value: address.addressLine1 ?? "",
+      })),
+    );
+    setTagOptions(
+      contact.tags.map((tag: string) => ({ label: tag, value: tag })),
+    );
+    setGroupOptions(
+      contact.groups.map((group: string) => ({ label: group, value: group })),
+    );
   };
 
   const onSave = async () => {
@@ -73,14 +109,8 @@ export function ContactFormScreen() {
       phone,
       email,
       address,
-      tags: tags
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean),
-      groups: groups
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean),
+      tags,
+      groups,
     };
 
     if (contactId) {
@@ -99,73 +129,69 @@ export function ContactFormScreen() {
         paddingBottom: 40,
       }}
     >
-      <Text style={styles.label}>이름</Text>
-      <TextInput
-        placeholder="이름"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
+      {"저혼자 쓸거기 때문에... 설정을 여러가지 방법으로 해보세요"}
+      <TwoDiv>
+        <TextInput
+          disabled
+          name="name"
+          title="이름"
+          data="이세호"
+          setData={() => {}}
+        />
+        <TextInput
+          disabled
+          name="nickname"
+          title="닉네임"
+          data="lsh02002"
+          setData={() => {}}
+        />
+      </TwoDiv>
 
-      <Text style={styles.label}>닉네임</Text>
-      <TextInput
-        placeholder="닉네임"
-        value={nickname}
-        onChangeText={setNickname}
-        style={styles.input}
-      />
+      <TwoDiv>
+        <SelectInput
+          name="phone"
+          title="전화번호"
+          value={phone}
+          setValue={setPhone}
+          options={phoneOptions}
+        />
 
-      <Text style={styles.label}>전화번호</Text>
-      <TextInput
-        placeholder="전화번호"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        style={styles.input}
-      />
+        <SelectInput
+          name="email"
+          title="이메일"
+          value={email}
+          setValue={setEmail}
+          options={emailOptions}
+        />
+      </TwoDiv>
 
-      <Text style={styles.label}>이메일</Text>
-      <TextInput
-        placeholder="이메일"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-      />
-
-      <Text style={styles.label}>메모</Text>
-      <TextInput
-        placeholder="메모"
-        value={memo}
-        onChangeText={setMemo}
-        multiline
-        style={[styles.input, styles.memoInput]}
-      />
-
-      <Text style={styles.label}>주소</Text>
-      <TextInput
-        placeholder="주소"
+      <SelectInput
+        name="address"
+        title="주소"
         value={address}
-        onChangeText={setAddress}
-        style={styles.input}
+        setValue={setAddress}
+        options={addressOptions}
       />
 
-      <Text style={styles.label}>태그</Text>
-      <TextInput
-        placeholder="태그 예: 친구, 회사, 가족"
-        value={tags}
-        onChangeText={setTags}
-        style={styles.input}
-      />
+      <TwoDiv>
+        <SelectArrayInput
+          name="tag"
+          title="태그"
+          values={tags}
+          setValues={setTags}
+          options={tagOptions}
+        />
 
-      <Text style={styles.label}>그룹</Text>
-      <TextInput
-        placeholder="그룹 예: 동창, 거래처"
-        value={groups}
-        onChangeText={setGroups}
-        style={styles.input}
-      />
+        <SelectArrayInput
+          name="group"
+          title="그룹"
+          values={groups}
+          setValues={setGroups}
+          options={groupOptions}
+        />
+      </TwoDiv>
+
+      <TextInput name="memo" title="메모" data={memo} setData={setMemo} />
 
       <TouchableOpacity style={styles.saveButton} onPress={onSave}>
         <Text style={styles.saveButtonText}>저장</Text>
@@ -180,7 +206,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 32,
   },
-
+  column: {
+    display: "flex",
+    width: "100%",
+  },
   label: {
     fontSize: 16,
     fontWeight: "600",
@@ -192,7 +221,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
-    borderRadius: 12,
+    borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginBottom: 16,
@@ -206,8 +235,9 @@ const styles = StyleSheet.create({
 
   saveButton: {
     backgroundColor: "#111",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     alignItems: "center",
     marginTop: 12,
   },

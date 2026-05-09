@@ -3,6 +3,7 @@ export type Phone = {
   phoneType: string;
   phoneNumber: string;
   isPrimary: boolean;
+  createdAt?: string;
 };
 
 export type Email = {
@@ -10,6 +11,7 @@ export type Email = {
   emailType: string;
   emailAddress: string;
   isPrimary: boolean;
+  createdAt?: string;
 };
 
 export type Address = {
@@ -21,6 +23,8 @@ export type Address = {
   city?: string | null;
   region?: string | null;
   country?: string | null;
+  isPrimary: boolean;
+  createdAt?: string;
 };
 
 export type Contact = {
