@@ -10,12 +10,12 @@ import {
 
 import { useSQLiteContext } from "expo-sqlite";
 
-import TextInput from "../input/TextInput";
-import { TwoDiv } from "../input/TwoDiv";
-import SelectInput, { Option } from "../input/SelectInput";
-import CheckboxInput from "../input/CheckboxInput";
+import TextInput from "../../input/TextInput";
+import { TwoDiv } from "../../input/TwoDiv";
+import SelectInput, { Option } from "../../input/SelectInput";
+import CheckboxInput from "../../input/CheckboxInput";
 
-import { AddressRepository } from "../../repositories/address/AddressRepository";
+import { AddressRepository } from "../../../repositories/address/AddressRepository";
 
 type Props = {
   onSaved?: () => void;

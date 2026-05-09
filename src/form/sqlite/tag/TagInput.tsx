@@ -11,48 +11,46 @@ import {
 
 import { useSQLiteContext } from "expo-sqlite";
 
-import TextInput from "../input/TextInput";
-import SelectInput, { Option } from "../input/SelectInput";
+import TextInput from "../../input/TextInput";
+import SelectInput, { Option } from "../../input/SelectInput";
 
-import { GroupRepository } from "../../repositories/group/GroupRepository";
+import { TagRepository } from "../../../repositories/tag/TagRepository";
 
 type Props = {
   onSaved?: () => void;
 };
 
-const GroupInput = ({ onSaved }: Props) => {
+const TagInput = ({ onSaved }: Props) => {
   const db = useSQLiteContext();
 
-  const groupRepository = useMemo(() => new GroupRepository(db), [db]);
+  const tagRepository = useMemo(() => new TagRepository(db), [db]);
 
   const [name, setName] = useState("");
 
-  const [description, setDescription] = useState("");
-
-  const [color, setColor] = useState("#2563EB");
+  const [color, setColor] = useState("#3B82F6");
 
   const [loading, setLoading] = useState(false);
 
   const colorOptions: Option[] = [
     {
       label: "blue",
-      value: "#2563EB",
+      value: "#3B82F6",
     },
     {
       label: "red",
-      value: "#DC2626",
+      value: "#EF4444",
     },
     {
       label: "green",
-      value: "#059669",
+      value: "#10B981",
     },
     {
       label: "purple",
-      value: "#7C3AED",
+      value: "#8B5CF6",
     },
     {
       label: "orange",
-      value: "#EA580C",
+      value: "#F97316",
     },
     {
       label: "gray",
@@ -63,30 +61,28 @@ const GroupInput = ({ onSaved }: Props) => {
   const onSave = async () => {
     try {
       if (!name.trim()) {
-        Alert.alert("그룹명을 입력하세요.");
+        Alert.alert("태그명을 입력하세요.");
 
         return;
       }
 
       setLoading(true);
 
-      await groupRepository.create({
+      await tagRepository.create({
         name,
-        description,
         color,
       });
 
-      Alert.alert("저장 완료", "그룹이 저장되었습니다.");
+      Alert.alert("저장 완료", "태그가 저장되었습니다.");
 
       setName("");
-      setDescription("");
-      setColor("#2563EB");
+      setColor("#3B82F6");
 
       onSaved?.();
     } catch (error) {
       console.error(error);
 
-      Alert.alert("오류", "그룹 저장 실패");
+      Alert.alert("오류", "태그 저장 실패");
     } finally {
       setLoading(false);
     }
@@ -99,23 +95,11 @@ const GroupInput = ({ onSaved }: Props) => {
         paddingBottom: 40,
       }}
     >
-      <TextInput
-        name="groupName"
-        title="그룹명"
-        data={name}
-        setData={setName}
-      />
-
-      <TextInput
-        name="description"
-        title="설명"
-        data={description}
-        setData={setDescription}
-      />
+      <TextInput name="tagName" title="태그명" data={name} setData={setName} />
 
       <SelectInput
-        name="groupColor"
-        title="그룹색상"
+        name="tagColor"
+        title="태그색상"
         value={color}
         setValue={setColor}
         options={colorOptions}
@@ -129,7 +113,7 @@ const GroupInput = ({ onSaved }: Props) => {
           },
         ]}
       >
-        <Text style={styles.previewText}>{name || "GROUP"}</Text>
+        <Text style={styles.previewText}>#{name || "preview"}</Text>
       </View>
 
       <TouchableOpacity
@@ -150,7 +134,7 @@ const GroupInput = ({ onSaved }: Props) => {
   );
 };
 
-export default GroupInput;
+export default TagInput;
 
 const styles = StyleSheet.create({
   container: {

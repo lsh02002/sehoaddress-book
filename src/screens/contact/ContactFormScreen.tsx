@@ -12,13 +12,13 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { RootStackParamList } from "../../App";
-import { ContactRepository } from "../repositories/contact/ContactRepository";
-import { TwoDiv } from "../form/input/TwoDiv";
-import SelectInput, { Option } from "../form/input/SelectInput";
-import { Address, Email, Phone } from "../domain/Contact";
-import SelectArrayInput from "../form/input/SelectArrayInput";
-import TextInput from "../form/input/TextInput";
+import { RootStackParamList } from "../../../App";
+import { ContactRepository } from "../../repositories/contact/ContactRepository";
+import { TwoDiv } from "../../form/input/TwoDiv";
+import SelectInput, { Option } from "../../form/input/SelectInput";
+import { Address, Email, Phone } from "../../domain/Contact";
+import SelectArrayInput from "../../form/input/SelectArrayInput";
+import TextInput from "../../form/input/TextInput";
 
 type RouteProps = RouteProp<RootStackParamList, "ContactForm">;
 
@@ -129,7 +129,7 @@ export function ContactFormScreen() {
         paddingBottom: 40,
       }}
     >
-      {"저혼자 쓸거기 때문에... 설정을 여러가지 방법으로 해보세요"}
+      {/*"저혼자 쓸거기 때문에... 설정을 여러가지 방법으로 해보세요"*/}
       <TwoDiv>
         <TextInput
           disabled

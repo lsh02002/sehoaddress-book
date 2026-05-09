@@ -2,8 +2,8 @@
 import { SQLiteProvider } from "expo-sqlite";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ContactListScreen } from "./src/screens/ContactListScreen";
-import { ContactFormScreen } from "./src/screens/ContactFormScreen";
+import { ContactListScreen } from "./src/screens/contact/ContactListScreen";
+import { ContactFormScreen } from "./src/screens/contact/ContactFormScreen";
 import { migrateDb } from "./src/db/migrate";
 
 export type RootStackParamList = {

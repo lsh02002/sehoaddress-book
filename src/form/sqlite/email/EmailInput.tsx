@@ -9,77 +9,76 @@ import {
 
 import { useSQLiteContext } from "expo-sqlite";
 
-import TextInput from "../input/TextInput";
-import { TwoDiv } from "../input/TwoDiv";
-import SelectInput, { Option } from "../input/SelectInput";
-import CheckboxInput from "../input/CheckboxInput";
+import TextInput from "../../input/TextInput";
+import { TwoDiv } from "../../input/TwoDiv";
+import SelectInput, { Option } from "../../input/SelectInput";
+import CheckboxInput from "../../input/CheckboxInput";
 
-import { PhoneRepository } from "../../repositories/phone/PhoneRepository";
+import { EmailRepository } from "../../../repositories/email/EmailRepository";
 
 type Props = {
-  contactId: number;
   onSaved?: () => void;
 };
 
-const PhoneInput = ({ contactId, onSaved }: Props) => {
+const EmailInput = ({ onSaved }: Props) => {
   const db = useSQLiteContext();
 
-  const phoneRepository = useMemo(() => new PhoneRepository(db), [db]);
+  const emailRepository = useMemo(() => new EmailRepository(db), [db]);
 
-  const [phoneType, setPhoneType] = useState("mobile");
-
-  const [phoneNumber, setPhoneNumber] = useState("");
-
+  const [emailType, setEmailType] = useState("personal");
+  const [emailAddress, setEmailAddress] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
-
   const [loading, setLoading] = useState(false);
 
-  const phoneOptions: Option[] = [
+  const emailOptions: Option[] = [
     {
-      label: "mobile",
-      value: "mobile",
+      label: "personal",
+      value: "personal",
     },
     {
-      label: "home",
-      value: "home",
+      label: "work",
+      value: "work",
     },
     {
-      label: "office",
-      value: "office",
+      label: "school",
+      value: "school",
     },
     {
-      label: "fax",
-      value: "fax",
+      label: "etc",
+      value: "etc",
     },
   ];
 
   const onSave = async () => {
     try {
-      if (!phoneNumber.trim()) {
-        Alert.alert("전화번호를 입력하세요.");
+      if (!emailAddress.trim()) {
+        Alert.alert("이메일을 입력하세요.");
+        return;
+      }
 
+      if (!emailAddress.includes("@")) {
+        Alert.alert("올바른 이메일 형식이 아닙니다.");
         return;
       }
 
       setLoading(true);
 
-      await phoneRepository.create({
-        phoneType,
-        phoneNumber,
+      await emailRepository.create({
+        emailType,
+        emailAddress,
         isPrimary,
       });
 
-      Alert.alert("저장 완료", "전화번호가 저장되었습니다.");
+      Alert.alert("저장 완료", "이메일이 저장되었습니다.");
 
-      setPhoneNumber("");
-      setPhoneType("mobile");
+      setEmailAddress("");
+      setEmailType("personal");
       setIsPrimary(false);
 
       onSaved?.();
     } catch (error) {
       console.error(error);
-
-      Alert.alert("오류", "전화번호 저장 실패");
+      Alert.alert("오류", "이메일 저장 실패");
     } finally {
       setLoading(false);
     }
@@ -114,23 +113,23 @@ const PhoneInput = ({ contactId, onSaved }: Props) => {
 
       <TwoDiv>
         <SelectInput
-          name="phonetype"
-          title="전화타입"
-          value={phoneType}
-          setValue={setPhoneType}
-          options={phoneOptions}
+          name="emailType"
+          title="이메일타입"
+          value={emailType}
+          setValue={setEmailType}
+          options={emailOptions}
         />
 
         <TextInput
-          name="phoneNumber"
-          title="전화번호"
-          data={phoneNumber}
-          setData={setPhoneNumber}
+          name="emailAddress"
+          title="이메일"
+          data={emailAddress}
+          setData={setEmailAddress}
         />
       </TwoDiv>
 
       <CheckboxInput
-        name="isprimary"
+        name="isPrimary"
         title="기본여부"
         checked={isPrimary}
         setChecked={setIsPrimary}
@@ -154,41 +153,13 @@ const PhoneInput = ({ contactId, onSaved }: Props) => {
   );
 };
 
-export default PhoneInput;
+export default EmailInput;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
     padding: 32,
-  },
-
-  column: {
-    display: "flex",
-    width: "100%",
-  },
-
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#222",
-    marginBottom: 6,
-    marginTop: 12,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-
-  memoInput: {
-    height: 140,
-    textAlignVertical: "top",
   },
 
   saveButton: {

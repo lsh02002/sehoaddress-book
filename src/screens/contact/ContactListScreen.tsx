@@ -12,9 +12,9 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { ContactRepository } from "../repositories/contact/ContactRepository";
-import { Contact } from "../domain/Contact";
-import { RootStackParamList } from "../../App";
+import { ContactRepository } from "../../repositories/contact/ContactRepository";
+import { Contact } from "../../domain/Contact";
+import { RootStackParamList } from "../../../App";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
