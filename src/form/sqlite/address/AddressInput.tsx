@@ -18,10 +18,11 @@ import CheckboxInput from "../../input/CheckboxInput";
 import { AddressRepository } from "../../../repositories/address/AddressRepository";
 
 type Props = {
+  contactId: number;
   onSaved?: () => void;
 };
 
-const AddressInput = ({ onSaved }: Props) => {
+const AddressInput = ({ contactId, onSaved }: Props) => {
   const db = useSQLiteContext();
 
   const addressRepository = useMemo(() => new AddressRepository(db), [db]);
@@ -70,6 +71,7 @@ const AddressInput = ({ onSaved }: Props) => {
       setLoading(true);
 
       await addressRepository.create({
+        contactId,
         addressType,
         postalCode,
         addressLine1,

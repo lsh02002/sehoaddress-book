@@ -17,64 +17,51 @@ import SelectInput, { Option } from "../../input/SelectInput";
 import { GroupRepository } from "../../../repositories/group/GroupRepository";
 
 type Props = {
+  contactId?: number;
   onSaved?: () => void;
 };
 
-const GroupInput = ({ onSaved }: Props) => {
+const GroupInput = ({ contactId, onSaved }: Props) => {
   const db = useSQLiteContext();
 
   const groupRepository = useMemo(() => new GroupRepository(db), [db]);
 
   const [name, setName] = useState("");
-
   const [description, setDescription] = useState("");
-
   const [color, setColor] = useState("#2563EB");
-
   const [loading, setLoading] = useState(false);
 
   const colorOptions: Option[] = [
-    {
-      label: "blue",
-      value: "#2563EB",
-    },
-    {
-      label: "red",
-      value: "#DC2626",
-    },
-    {
-      label: "green",
-      value: "#059669",
-    },
-    {
-      label: "purple",
-      value: "#7C3AED",
-    },
-    {
-      label: "orange",
-      value: "#EA580C",
-    },
-    {
-      label: "gray",
-      value: "#6B7280",
-    },
+    { label: "blue", value: "#2563EB" },
+    { label: "red", value: "#DC2626" },
+    { label: "green", value: "#059669" },
+    { label: "purple", value: "#7C3AED" },
+    { label: "orange", value: "#EA580C" },
+    { label: "gray", value: "#6B7280" },
   ];
 
   const onSave = async () => {
     try {
       if (!name.trim()) {
         Alert.alert("그룹명을 입력하세요.");
-
         return;
       }
 
       setLoading(true);
 
-      await groupRepository.create({
-        name,
-        description,
-        color,
-      });
+      if (contactId) {
+        await groupRepository.createAndAddToContact(contactId, {
+          name,
+          description,
+          color,
+        });
+      } else {
+        await groupRepository.create({
+          name,
+          description,
+          color,
+        });
+      }
 
       Alert.alert("저장 완료", "그룹이 저장되었습니다.");
 
@@ -85,7 +72,6 @@ const GroupInput = ({ onSaved }: Props) => {
       onSaved?.();
     } catch (error) {
       console.error(error);
-
       Alert.alert("오류", "그룹 저장 실패");
     } finally {
       setLoading(false);
@@ -95,9 +81,7 @@ const GroupInput = ({ onSaved }: Props) => {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 40,
-      }}
+      contentContainerStyle={{ paddingBottom: 40 }}
     >
       <TextInput
         name="groupName"
@@ -121,24 +105,12 @@ const GroupInput = ({ onSaved }: Props) => {
         options={colorOptions}
       />
 
-      <View
-        style={[
-          styles.preview,
-          {
-            backgroundColor: color,
-          },
-        ]}
-      >
+      <View style={[styles.preview, { backgroundColor: color }]}>
         <Text style={styles.previewText}>{name || "GROUP"}</Text>
       </View>
 
       <TouchableOpacity
-        style={[
-          styles.saveButton,
-          loading && {
-            opacity: 0.5,
-          },
-        ]}
+        style={[styles.saveButton, loading && { opacity: 0.5 }]}
         disabled={loading}
         onPress={onSave}
       >

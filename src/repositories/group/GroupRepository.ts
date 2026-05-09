@@ -3,8 +3,8 @@ import type { SQLiteDatabase } from "expo-sqlite";
 export type Group = {
   id?: number;
   name: string;
-  description?: string;
-  color?: string;
+  description?: string | null;
+  color?: string | null;
   createdAt?: string;
 };
 
@@ -23,7 +23,22 @@ export class GroupRepository {
       SELECT *
       FROM groups
       ORDER BY name ASC
+      `,
+    );
+
+    return rows.map(this.toDomain);
+  }
+
+  async findByContactId(contactId: number): Promise<Group[]> {
+    const rows = await this.db.getAllAsync<any>(
       `
+      SELECT g.*
+      FROM groups g
+      JOIN contact_groups cg ON cg.group_id = g.id
+      WHERE cg.contact_id = ?
+      ORDER BY g.name ASC
+      `,
+      [contactId],
     );
 
     return rows.map(this.toDomain);
@@ -36,37 +51,29 @@ export class GroupRepository {
       FROM groups
       WHERE id = ?
       `,
-      [id]
+      [id],
     );
 
     return row ? this.toDomain(row) : null;
   }
 
-  async findByName(
-    name: string
-  ): Promise<Group | null> {
+  async findByName(name: string): Promise<Group | null> {
     const row = await this.db.getFirstAsync<any>(
       `
       SELECT *
       FROM groups
       WHERE LOWER(name) = LOWER(?)
       `,
-      [name.trim()]
+      [name.trim()],
     );
 
     return row ? this.toDomain(row) : null;
   }
 
-  async create(
-    input: GroupInput
-  ): Promise<number> {
-    const exists = await this.findByName(
-      input.name
-    );
+  async create(input: GroupInput): Promise<number> {
+    const exists = await this.findByName(input.name);
 
-    if (exists?.id) {
-      return exists.id;
-    }
+    if (exists?.id) return exists.id;
 
     const now = new Date().toISOString();
 
@@ -81,21 +88,13 @@ export class GroupRepository {
       )
       VALUES (?, ?, ?, ?)
       `,
-      [
-        input.name.trim(),
-        input.description ?? null,
-        input.color ?? null,
-        now,
-      ]
+      [input.name.trim(), input.description ?? null, input.color ?? null, now],
     );
 
     return result.lastInsertRowId;
   }
 
-  async update(
-    id: number,
-    input: GroupInput
-  ): Promise<void> {
+  async update(id: number, input: GroupInput): Promise<void> {
     await this.db.runAsync(
       `
       UPDATE groups
@@ -105,12 +104,7 @@ export class GroupRepository {
         color = ?
       WHERE id = ?
       `,
-      [
-        input.name.trim(),
-        input.description ?? null,
-        input.color ?? null,
-        id,
-      ]
+      [input.name.trim(), input.description ?? null, input.color ?? null, id],
     );
   }
 
@@ -120,8 +114,58 @@ export class GroupRepository {
       DELETE FROM groups
       WHERE id = ?
       `,
-      [id]
+      [id],
     );
+  }
+
+  async addToContact(contactId: number, groupId: number): Promise<void> {
+    await this.db.runAsync(
+      `
+      INSERT OR IGNORE INTO contact_groups
+      (contact_id, group_id)
+      VALUES (?, ?)
+      `,
+      [contactId, groupId],
+    );
+  }
+
+  async removeFromContact(contactId: number, groupId: number): Promise<void> {
+    await this.db.runAsync(
+      `
+      DELETE FROM contact_groups
+      WHERE contact_id = ?
+        AND group_id = ?
+      `,
+      [contactId, groupId],
+    );
+  }
+
+  async replaceContactGroups(
+    contactId: number,
+    groupIds: number[],
+  ): Promise<void> {
+    await this.db.runAsync(
+      `
+      DELETE FROM contact_groups
+      WHERE contact_id = ?
+      `,
+      [contactId],
+    );
+
+    for (const groupId of groupIds) {
+      await this.addToContact(contactId, groupId);
+    }
+  }
+
+  async createAndAddToContact(
+    contactId: number,
+    input: GroupInput,
+  ): Promise<number> {
+    const groupId = await this.create(input);
+
+    await this.addToContact(contactId, groupId);
+
+    return groupId;
   }
 
   private toDomain(row: any): Group {

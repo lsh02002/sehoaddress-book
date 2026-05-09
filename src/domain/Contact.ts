@@ -1,5 +1,6 @@
 export type Phone = {
   id?: number;
+  contactId: number;
   phoneType: string;
   phoneNumber: string;
   isPrimary: boolean;
@@ -8,6 +9,7 @@ export type Phone = {
 
 export type Email = {
   id?: number;
+  contactId: number;
   emailType: string;
   emailAddress: string;
   isPrimary: boolean;
@@ -16,6 +18,7 @@ export type Email = {
 
 export type Address = {
   id?: number;
+  contactId: number;
   addressType: string;
   postalCode?: string | null;
   addressLine1?: string | null;

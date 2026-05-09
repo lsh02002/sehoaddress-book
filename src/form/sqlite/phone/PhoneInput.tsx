@@ -13,14 +13,14 @@ import TextInput from "../../input/TextInput";
 import { TwoDiv } from "../../input/TwoDiv";
 import SelectInput, { Option } from "../../input/SelectInput";
 import CheckboxInput from "../../input/CheckboxInput";
-
 import { PhoneRepository } from "../../../repositories/phone/PhoneRepository";
 
-type Props = {  
+type Props = {
+  contactId: number;
   onSaved?: () => void;
 };
 
-const PhoneInput = ({ onSaved }: Props) => {
+const PhoneInput = ({ contactId, onSaved }: Props) => {
   const db = useSQLiteContext();
 
   const phoneRepository = useMemo(() => new PhoneRepository(db), [db]);
@@ -63,6 +63,7 @@ const PhoneInput = ({ onSaved }: Props) => {
       setLoading(true);
 
       await phoneRepository.create({
+        contactId,
         phoneType,
         phoneNumber,
         isPrimary,

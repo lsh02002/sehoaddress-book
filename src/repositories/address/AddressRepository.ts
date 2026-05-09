@@ -1,7 +1,8 @@
 import type { SQLiteDatabase } from "expo-sqlite";
-import { Address } from "../../domain/Contact";
+import type { Address } from "../../domain/Contact";
 
 export type AddressInput = {
+  contactId: number;
   addressType?: string;
   postalCode?: string;
   addressLine1: string;
@@ -20,8 +21,22 @@ export class AddressRepository {
       `
       SELECT *
       FROM addresses
-      ORDER BY is_primary DESC, id DESC
+      ORDER BY contact_id ASC, is_primary DESC, id DESC
       `,
+    );
+
+    return rows.map(this.toDomain);
+  }
+
+  async findByContactId(contactId: number): Promise<Address[]> {
+    const rows = await this.db.getAllAsync<any>(
+      `
+      SELECT *
+      FROM addresses
+      WHERE contact_id = ?
+      ORDER BY is_primary DESC, id ASC
+      `,
+      [contactId],
     );
 
     return rows.map(this.toDomain);
@@ -42,7 +57,7 @@ export class AddressRepository {
 
   async create(input: AddressInput): Promise<number> {
     if (input.isPrimary) {
-      await this.clearPrimary();
+      await this.clearPrimary(input.contactId);
     }
 
     const now = new Date().toISOString();
@@ -51,6 +66,7 @@ export class AddressRepository {
       `
       INSERT INTO addresses
       (
+        contact_id,
         address_type,
         postal_code,
         address_line1,
@@ -61,9 +77,10 @@ export class AddressRepository {
         is_primary,
         created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
+        input.contactId,
         input.addressType ?? "home",
         input.postalCode ?? null,
         input.addressLine1.trim(),
@@ -81,13 +98,14 @@ export class AddressRepository {
 
   async update(id: number, input: AddressInput): Promise<void> {
     if (input.isPrimary) {
-      await this.clearPrimary();
+      await this.clearPrimary(input.contactId);
     }
 
     await this.db.runAsync(
       `
       UPDATE addresses
       SET
+        contact_id = ?,
         address_type = ?,
         postal_code = ?,
         address_line1 = ?,
@@ -99,6 +117,7 @@ export class AddressRepository {
       WHERE id = ?
       `,
       [
+        input.contactId,
         input.addressType ?? "home",
         input.postalCode ?? null,
         input.addressLine1.trim(),
@@ -122,8 +141,29 @@ export class AddressRepository {
     );
   }
 
+  async deleteByContactId(contactId: number): Promise<void> {
+    await this.db.runAsync(
+      `
+      DELETE FROM addresses
+      WHERE contact_id = ?
+      `,
+      [contactId],
+    );
+  }
+
   async setPrimary(id: number): Promise<void> {
-    await this.clearPrimary();
+    const address = await this.db.getFirstAsync<any>(
+      `
+      SELECT contact_id
+      FROM addresses
+      WHERE id = ?
+      `,
+      [id],
+    );
+
+    if (!address) return;
+
+    await this.clearPrimary(address.contact_id);
 
     await this.db.runAsync(
       `
@@ -135,18 +175,21 @@ export class AddressRepository {
     );
   }
 
-  private async clearPrimary() {
+  private async clearPrimary(contactId: number): Promise<void> {
     await this.db.runAsync(
       `
       UPDATE addresses
       SET is_primary = 0
+      WHERE contact_id = ?
       `,
+      [contactId],
     );
   }
 
   private toDomain(row: any): Address {
     return {
       id: row.id,
+      contactId: row.contact_id,
       addressType: row.address_type,
       postalCode: row.postal_code,
       addressLine1: row.address_line1,

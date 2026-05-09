@@ -17,61 +17,48 @@ import SelectInput, { Option } from "../../input/SelectInput";
 import { TagRepository } from "../../../repositories/tag/TagRepository";
 
 type Props = {
+  contactId?: number;
   onSaved?: () => void;
 };
 
-const TagInput = ({ onSaved }: Props) => {
+const TagInput = ({ contactId, onSaved }: Props) => {
   const db = useSQLiteContext();
 
   const tagRepository = useMemo(() => new TagRepository(db), [db]);
 
   const [name, setName] = useState("");
-
   const [color, setColor] = useState("#3B82F6");
-
   const [loading, setLoading] = useState(false);
 
   const colorOptions: Option[] = [
-    {
-      label: "blue",
-      value: "#3B82F6",
-    },
-    {
-      label: "red",
-      value: "#EF4444",
-    },
-    {
-      label: "green",
-      value: "#10B981",
-    },
-    {
-      label: "purple",
-      value: "#8B5CF6",
-    },
-    {
-      label: "orange",
-      value: "#F97316",
-    },
-    {
-      label: "gray",
-      value: "#6B7280",
-    },
+    { label: "blue", value: "#3B82F6" },
+    { label: "red", value: "#EF4444" },
+    { label: "green", value: "#10B981" },
+    { label: "purple", value: "#8B5CF6" },
+    { label: "orange", value: "#F97316" },
+    { label: "gray", value: "#6B7280" },
   ];
 
   const onSave = async () => {
     try {
       if (!name.trim()) {
         Alert.alert("태그명을 입력하세요.");
-
         return;
       }
 
       setLoading(true);
 
-      await tagRepository.create({
-        name,
-        color,
-      });
+      if (contactId) {
+        await tagRepository.createAndAddToContact(contactId, {
+          name,
+          color,
+        });
+      } else {
+        await tagRepository.create({
+          name,
+          color,
+        });
+      }
 
       Alert.alert("저장 완료", "태그가 저장되었습니다.");
 
@@ -81,7 +68,6 @@ const TagInput = ({ onSaved }: Props) => {
       onSaved?.();
     } catch (error) {
       console.error(error);
-
       Alert.alert("오류", "태그 저장 실패");
     } finally {
       setLoading(false);
@@ -91,9 +77,7 @@ const TagInput = ({ onSaved }: Props) => {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 40,
-      }}
+      contentContainerStyle={{ paddingBottom: 40 }}
     >
       <TextInput name="tagName" title="태그명" data={name} setData={setName} />
 
@@ -105,24 +89,12 @@ const TagInput = ({ onSaved }: Props) => {
         options={colorOptions}
       />
 
-      <View
-        style={[
-          styles.preview,
-          {
-            backgroundColor: color,
-          },
-        ]}
-      >
+      <View style={[styles.preview, { backgroundColor: color }]}>
         <Text style={styles.previewText}>#{name || "preview"}</Text>
       </View>
 
       <TouchableOpacity
-        style={[
-          styles.saveButton,
-          loading && {
-            opacity: 0.5,
-          },
-        ]}
+        style={[styles.saveButton, loading && { opacity: 0.5 }]}
         disabled={loading}
         onPress={onSave}
       >

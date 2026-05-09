@@ -17,10 +17,11 @@ import CheckboxInput from "../../input/CheckboxInput";
 import { EmailRepository } from "../../../repositories/email/EmailRepository";
 
 type Props = {
+  contactId: number;
   onSaved?: () => void;
 };
 
-const EmailInput = ({ onSaved }: Props) => {
+const EmailInput = ({ contactId, onSaved }: Props) => {
   const db = useSQLiteContext();
 
   const emailRepository = useMemo(() => new EmailRepository(db), [db]);
@@ -31,26 +32,19 @@ const EmailInput = ({ onSaved }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const emailOptions: Option[] = [
-    {
-      label: "personal",
-      value: "personal",
-    },
-    {
-      label: "work",
-      value: "work",
-    },
-    {
-      label: "school",
-      value: "school",
-    },
-    {
-      label: "etc",
-      value: "etc",
-    },
+    { label: "personal", value: "personal" },
+    { label: "work", value: "work" },
+    { label: "school", value: "school" },
+    { label: "etc", value: "etc" },
   ];
 
   const onSave = async () => {
     try {
+      if (!contactId) {
+        Alert.alert("연락처 정보가 없습니다.");
+        return;
+      }
+
       if (!emailAddress.trim()) {
         Alert.alert("이메일을 입력하세요.");
         return;
@@ -64,6 +58,7 @@ const EmailInput = ({ onSaved }: Props) => {
       setLoading(true);
 
       await emailRepository.create({
+        contactId,
         emailType,
         emailAddress,
         isPrimary,
@@ -136,12 +131,7 @@ const EmailInput = ({ onSaved }: Props) => {
       />
 
       <TouchableOpacity
-        style={[
-          styles.saveButton,
-          loading && {
-            opacity: 0.5,
-          },
-        ]}
+        style={[styles.saveButton, loading && { opacity: 0.5 }]}
         disabled={loading}
         onPress={onSave}
       >

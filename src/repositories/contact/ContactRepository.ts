@@ -83,6 +83,7 @@ export class ContactRepository {
 
       phones: phones.map((p) => ({
         id: p.id,
+        contactId: p.contactId,
         phoneType: p.phone_type,
         phoneNumber: p.phone_number,
         isPrimary: p.is_primary === 1,
@@ -90,6 +91,7 @@ export class ContactRepository {
 
       emails: emails.map((e) => ({
         id: e.id,
+        contactId: e.contactId,
         emailType: e.email_type,
         emailAddress: e.email_address,
         isPrimary: e.is_primary === 1,
@@ -97,6 +99,7 @@ export class ContactRepository {
 
       addresses: addresses.map((a) => ({
         id: a.id,
+        contactId: a.contactId,
         addressType: a.address_type,
         postalCode: a.postal_code,
         addressLine1: a.address_line1,
@@ -104,7 +107,7 @@ export class ContactRepository {
         city: a.city,
         region: a.region,
         country: a.country,
-        isPrimary: a.isPrimary,
+        isPrimary: a.is_primary === 1,
       })),
 
       tags: tags.map((t) => t.name),
