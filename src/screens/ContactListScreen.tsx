@@ -12,9 +12,9 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { ContactRepository } from "../../repositories/contact/ContactRepository";
-import { Contact } from "../../domain/Contact";
-import { RootStackParamList } from "../../../App";
+import { ContactRepository } from "../repositories/ContactRepository";
+import { Contact } from "../domain/Contact";
+import { RootStackParamList } from "../../App";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -61,6 +61,21 @@ export function ContactListScreen() {
   };
 
   const renderItem = ({ item }: { item: Contact }) => {
+    const phoneText = item.phones
+      .map((phone) => phone.phoneNumber)
+      .filter(Boolean)
+      .join(", ");
+
+    const emailText = item.emails
+      .map((email) => email.emailAddress)
+      .filter(Boolean)
+      .join(", ");
+
+    const addressText = item.addresses
+      .map((address) => address.addressLine1)
+      .filter(Boolean)
+      .join(", ");
+
     return (
       <>
         <TouchableOpacity
@@ -69,60 +84,16 @@ export function ContactListScreen() {
         >
           <View style={styles.cardHeader}>
             <Text style={styles.name}>{item.name}</Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("AddressInput", { contactId: item.id })
-                }
-              >
-                <Text style={styles.menuText}>주소추가</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("EmailInput", { contactId: item.id })
-                }
-              >
-                <Text style={styles.menuText}>이메일추가</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("GroupInput", { contactId: item.id })
-                }
-              >
-                <Text style={styles.menuText}>그룹추가</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("PhoneInput", { contactId: item.id })
-                }
-              >
-                <Text style={styles.menuText}>전화번호추가</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("TagInput", { contactId: item.id })
-                }
-              >
-                <Text style={styles.menuText}>태크추가</Text>
-              </TouchableOpacity>
-            </View>
-
             <TouchableOpacity onPress={() => onToggleFavorite(item)}>
               <Text style={styles.favorite}>{item.isFavorite ? "★" : "☆"}</Text>
             </TouchableOpacity>
           </View>
 
-          {!!item.phones[0]?.phoneNumber && (
-            <Text style={styles.text}>{item.phones[0].phoneNumber}</Text>
-          )}
+          {!!phoneText && <Text style={styles.text}>{phoneText}</Text>}
 
-          {!!item.emails[0]?.emailAddress && (
-            <Text style={styles.text}>{item.emails[0].emailAddress}</Text>
-          )}
+          {!!emailText && <Text style={styles.text}>{emailText}</Text>}
 
-          {!!item.addresses[0]?.addressLine1 && (
-            <Text style={styles.text}>{item.addresses[0].addressLine1}</Text>
-          )}
+          {!!addressText && <Text style={styles.text}>{addressText}</Text>}
 
           {item.tags.length > 0 && (
             <Text style={styles.memo}>#{item.tags.join(" #")}</Text>

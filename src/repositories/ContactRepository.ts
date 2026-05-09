@@ -1,5 +1,5 @@
 import type { SQLiteDatabase } from "expo-sqlite";
-import type { Contact, ContactInput } from "../../domain/Contact";
+import type { Contact, ContactInput } from "../domain/Contact";
 
 export class ContactRepository {
   constructor(private db: SQLiteDatabase) {}
@@ -46,7 +46,7 @@ export class ContactRepository {
     );
 
     const addresses = await this.db.getAllAsync<any>(
-      `SELECT * FROM addresses WHERE contact_id = ? ORDER BY id ASC`,
+      `SELECT * FROM addresses WHERE contact_id = ? ORDER BY is_primary DESC, id ASC`,
       [id],
     );
 
@@ -83,7 +83,7 @@ export class ContactRepository {
 
       phones: phones.map((p) => ({
         id: p.id,
-        contactId: p.contactId,
+        contactId: p.contact_id,
         phoneType: p.phone_type,
         phoneNumber: p.phone_number,
         isPrimary: p.is_primary === 1,
@@ -91,7 +91,7 @@ export class ContactRepository {
 
       emails: emails.map((e) => ({
         id: e.id,
-        contactId: e.contactId,
+        contactId: e.contact_id,
         emailType: e.email_type,
         emailAddress: e.email_address,
         isPrimary: e.is_primary === 1,
@@ -99,7 +99,7 @@ export class ContactRepository {
 
       addresses: addresses.map((a) => ({
         id: a.id,
-        contactId: a.contactId,
+        contactId: a.contact_id,
         addressType: a.address_type,
         postalCode: a.postal_code,
         addressLine1: a.address_line1,
@@ -115,35 +115,43 @@ export class ContactRepository {
     };
   }
 
-  async create(input: ContactInput) {
+  async create(input: ContactInput): Promise<number> {
     const now = new Date().toISOString();
 
-    const result = await this.db.runAsync(
-      `
-      INSERT INTO contacts
-      (name, nickname, memo, is_favorite, created_at, updated_at)
-      VALUES (?, ?, ?, 0, ?, ?)
-      `,
-      [input.name, input.nickname ?? null, input.memo ?? null, now, now],
-    );
+    let contactId = 0;
 
-    const contactId = result.lastInsertRowId;
-    await this.replaceRelations(contactId, input);
+    await this.db.withTransactionAsync(async () => {
+      const result = await this.db.runAsync(
+        `
+        INSERT INTO contacts
+        (name, nickname, memo, is_favorite, created_at, updated_at)
+        VALUES (?, ?, ?, 0, ?, ?)
+        `,
+        [input.name, input.nickname ?? null, input.memo ?? null, now, now],
+      );
+
+      contactId = result.lastInsertRowId;
+      await this.replaceRelations(contactId, input);
+    });
+
+    return contactId;
   }
 
   async update(id: number, input: ContactInput) {
     const now = new Date().toISOString();
 
-    await this.db.runAsync(
-      `
-      UPDATE contacts
-      SET name = ?, nickname = ?, memo = ?, updated_at = ?
-      WHERE id = ?
-      `,
-      [input.name, input.nickname ?? null, input.memo ?? null, now, id],
-    );
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync(
+        `
+        UPDATE contacts
+        SET name = ?, nickname = ?, memo = ?, updated_at = ?
+        WHERE id = ?
+        `,
+        [input.name, input.nickname ?? null, input.memo ?? null, now, id],
+      );
 
-    await this.replaceRelations(id, input);
+      await this.replaceRelations(id, input);
+    });
   }
 
   async toggleFavorite(id: number, isFavorite: boolean) {
@@ -157,90 +165,126 @@ export class ContactRepository {
     await this.db.runAsync(`DELETE FROM contacts WHERE id = ?`, [id]);
   }
 
+  private unique(values?: string[]) {
+    return [...new Set((values ?? []).map((value) => value.trim()))].filter(
+      Boolean,
+    );
+  }
+
   private async replaceRelations(contactId: number, input: ContactInput) {
     await this.db.runAsync(`DELETE FROM phones WHERE contact_id = ?`, [
       contactId,
     ]);
+
     await this.db.runAsync(`DELETE FROM emails WHERE contact_id = ?`, [
       contactId,
     ]);
+
     await this.db.runAsync(`DELETE FROM addresses WHERE contact_id = ?`, [
       contactId,
     ]);
+
     await this.db.runAsync(`DELETE FROM contact_tags WHERE contact_id = ?`, [
       contactId,
     ]);
+
     await this.db.runAsync(`DELETE FROM contact_groups WHERE contact_id = ?`, [
       contactId,
     ]);
 
-    if (input.phone?.trim()) {
+    const now = new Date().toISOString();
+
+    const uniquePhones = this.unique(input.phones);
+
+    for (const [index, phone] of uniquePhones.entries()) {
       await this.db.runAsync(
         `
         INSERT INTO phones
-        (contact_id, phone_type, phone_number, is_primary)
-        VALUES (?, 'mobile', ?, 1)
+        (contact_id, phone_type, phone_number, is_primary, created_at)
+        VALUES (?, 'mobile', ?, ?, ?)
         `,
-        [contactId, input.phone.trim()],
+        [contactId, phone, index === 0 ? 1 : 0, now],
       );
     }
 
-    if (input.email?.trim()) {
+    const uniqueEmails = this.unique(input.emails);
+
+    for (const [index, email] of uniqueEmails.entries()) {
       await this.db.runAsync(
         `
         INSERT INTO emails
-        (contact_id, email_type, email_address, is_primary)
-        VALUES (?, 'personal', ?, 1)
+        (contact_id, email_type, email_address, is_primary, created_at)
+        VALUES (?, 'personal', ?, ?, ?)
         `,
-        [contactId, input.email.trim()],
+        [contactId, email, index === 0 ? 1 : 0, now],
       );
     }
 
-    if (input.address?.trim()) {
+    const uniqueAddresses = this.unique(input.addresses);
+
+    for (const [index, address] of uniqueAddresses.entries()) {
       await this.db.runAsync(
         `
         INSERT INTO addresses
-        (contact_id, address_type, address_line1, country)
-        VALUES (?, 'home', ?, 'KR')
+        (contact_id, address_type, address_line1, country, is_primary, created_at)
+        VALUES (?, 'home', ?, 'KR', ?, ?)
         `,
-        [contactId, input.address.trim()],
+        [contactId, address, index === 0 ? 1 : 0, now],
       );
     }
 
-    for (const tagName of input.tags ?? []) {
-      const name = tagName.trim();
-      if (!name) continue;
+    const uniqueTags = this.unique(input.tags);
 
-      await this.db.runAsync(`INSERT OR IGNORE INTO tags (name) VALUES (?)`, [
-        name,
-      ]);
+    for (const name of uniqueTags) {
+      await this.db.runAsync(
+        `
+    INSERT OR IGNORE INTO tags (name, created_at)
+    VALUES (?, ?)
+    `,
+        [name, now],
+      );
 
-      const tag = await this.db.getFirstAsync<any>(
+      const tag = await this.db.getFirstAsync<{ id: number }>(
         `SELECT id FROM tags WHERE name = ?`,
         [name],
       );
 
+      if (!tag) continue;
+
       await this.db.runAsync(
-        `INSERT OR IGNORE INTO contact_tags (contact_id, tag_id) VALUES (?, ?)`,
+        `
+    INSERT OR IGNORE INTO contact_tags
+    (contact_id, tag_id)
+    VALUES (?, ?)
+    `,
         [contactId, tag.id],
       );
     }
 
-    for (const groupName of input.groups ?? []) {
-      const name = groupName.trim();
-      if (!name) continue;
+    const uniqueGroups = this.unique(input.groups);
 
-      await this.db.runAsync(`INSERT OR IGNORE INTO groups (name) VALUES (?)`, [
-        name,
-      ]);
+    for (const name of uniqueGroups) {
+      await this.db.runAsync(
+        `
+    INSERT OR IGNORE INTO groups (name, created_at)
+    VALUES (?, ?)
+    `,
+        [name, now],
+      );
 
-      const group = await this.db.getFirstAsync<any>(
+      const group = await this.db.getFirstAsync<{ id: number }>(
         `SELECT id FROM groups WHERE name = ?`,
         [name],
       );
 
+      if (!group) continue;
+
       await this.db.runAsync(
-        `INSERT OR IGNORE INTO contact_groups (contact_id, group_id) VALUES (?, ?)`,
+        `
+    INSERT OR IGNORE INTO contact_groups
+    (contact_id, group_id)
+    VALUES (?, ?)
+    `,
         [contactId, group.id],
       );
     }

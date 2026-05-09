@@ -50,9 +50,9 @@ export type ContactInput = {
   name: string;
   nickname?: string;
   memo?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
+  phones?: string[];
+  emails?: string[];
+  addresses?: string[];
   tags?: string[];
   groups?: string[];
 };
