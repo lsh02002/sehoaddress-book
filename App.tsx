@@ -9,11 +9,6 @@ import { migrateDb } from "./src/db/migrate";
 export type RootStackParamList = {
   ContactList: undefined;
   ContactForm: { id?: number } | undefined;
-  AddressInput: { contactId: number } | undefined;
-  EmailInput: { contactId: number } | undefined;
-  GroupInput: { contactId: number } | undefined;
-  PhoneInput: { contactId: number } | undefined;
-  TagInput: { contactId: number } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
