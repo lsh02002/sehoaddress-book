@@ -6,9 +6,12 @@ export type PhoneInput = {
   phoneType?: string;
   phoneNumber: string;
   isPrimary?: boolean;
+  createdAt: string;
 };
 
 export class PhoneRepository {
+  now = new Date().toISOString();
+
   constructor(private db: SQLiteDatabase) {}
 
   async findByContactId(contactId: number): Promise<Phone[]> {
@@ -46,14 +49,15 @@ export class PhoneRepository {
     const result = await this.db.runAsync(
       `
       INSERT INTO phones
-      (contact_id, phone_type, phone_number, is_primary)
-      VALUES (?, ?, ?, ?)
+      (contact_id, phone_type, phone_number, is_primary, created_at)
+      VALUES (?, ?, ?, ?, ?)
       `,
       [
         input.contactId,
         input.phoneType ?? "mobile",
         input.phoneNumber.trim(),
         (input.isPrimary ?? true) ? 1 : 0,
+        input.createdAt
       ],
     );
 
@@ -127,6 +131,7 @@ export class PhoneRepository {
       phoneType?: string;
       phoneNumber: string;
       isPrimary?: boolean;
+      createdAt: string;
     }[],
   ): Promise<void> {
     await this.deleteByContactId(contactId);
@@ -141,6 +146,7 @@ export class PhoneRepository {
         phoneType: phone.phoneType ?? "mobile",
         phoneNumber: phone.phoneNumber,
         isPrimary: phone.isPrimary ?? i === 0,
+        createdAt: phone.createdAt,
       });
     }
   }
@@ -163,6 +169,7 @@ export class PhoneRepository {
       phoneType: row.phone_type,
       phoneNumber: row.phone_number,
       isPrimary: row.is_primary === 1,
+      createdAt: row.created_at,
     };
   }
 }

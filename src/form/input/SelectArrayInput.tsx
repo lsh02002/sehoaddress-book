@@ -62,7 +62,7 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
       placeholder,
       maxMenuHeight = 220,
     },
-    ref
+    ref,
   ) => {
     const [open, setOpen] = useState(false);
     const [focusedIndex, setFocusedIndex] = useState<number>(-1);
@@ -73,14 +73,14 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
 
     const mapByValue = useMemo(
       () => new Map(options.map((o) => [o.value, o])),
-      [options]
+      [options],
     );
 
     const isPlaceholder = values.length === 0;
 
     const selectedChips = useMemo(
       () => values.map((v) => mapByValue.get(v)?.label || v).filter(Boolean),
-      [values, mapByValue]
+      [values, mapByValue],
     );
 
     const toggleValue = useCallback(
@@ -88,12 +88,10 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
         if (mapByValue.get(v)?.disabled) return;
 
         setValues(
-          values.includes(v)
-            ? values.filter((x) => x !== v)
-            : [...values, v]
+          values.includes(v) ? values.filter((x) => x !== v) : [...values, v],
         );
       },
-      [mapByValue, setValues, values]
+      [mapByValue, setValues, values],
     );
 
     const computeMenuPosition = useCallback(() => {
@@ -108,7 +106,7 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
 
         const desiredBelowH = Math.min(
           maxMenuHeight,
-          Math.max(spaceBelow, MIN_MENU_HEIGHT)
+          Math.max(spaceBelow, MIN_MENU_HEIGHT),
         );
 
         const shouldFlip =
@@ -116,7 +114,7 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
 
         const heightIfAbove = Math.min(
           maxMenuHeight,
-          Math.max(spaceAbove, MIN_MENU_HEIGHT)
+          Math.max(spaceAbove, MIN_MENU_HEIGHT),
         );
 
         const finalMaxH = shouldFlip
@@ -126,12 +124,12 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
         const rawLeft = Math.round(x);
         const clampedLeft = Math.max(
           SCREEN_PADDING,
-          Math.min(rawLeft, viewportW - width - SCREEN_PADDING)
+          Math.min(rawLeft, viewportW - width - SCREEN_PADDING),
         );
 
         const top = shouldFlip
           ? Math.max(SCREEN_PADDING, Math.round(rectTop - finalMaxH - 8))
-          : Math.round(rectBottom + 8);
+          : Math.round(rectBottom + 24);
 
         setMenuPos({
           left: clampedLeft,
@@ -179,7 +177,7 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
         toggle: toggleMenu,
         focus: openMenu,
       }),
-      [openMenu, closeMenu, toggleMenu]
+      [openMenu, closeMenu, toggleMenu],
     );
 
     useEffect(() => {
@@ -289,7 +287,7 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
                 {options.length === 0 ? (
                   <View style={styles.emptyWrap}>
                     <Text style={styles.emptyText}>
-                      해당 {title}이 없습니다.
+                      해당 {title}이(가) 없습니다.
                     </Text>
                   </View>
                 ) : (
@@ -306,7 +304,7 @@ const SelectArrayInput = forwardRef<SelectArrayInputRef, SelectArrayInputProps>(
         </Modal>
       </View>
     );
-  }
+  },
 );
 
 SelectArrayInput.displayName = "SelectArrayInput";

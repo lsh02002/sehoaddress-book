@@ -15,13 +15,16 @@ import TextInput from "../../input/TextInput";
 import SelectInput, { Option } from "../../input/SelectInput";
 
 import { TagRepository } from "../../../repositories/tag/TagRepository";
+import { useRoute } from "@react-navigation/native";
 
 type Props = {
-  contactId?: number;
   onSaved?: () => void;
 };
 
-const TagInput = ({ contactId, onSaved }: Props) => {
+const TagInput = ({ onSaved }: Props) => {
+  const route = useRoute<any>();
+  const { contactId } = route.params;
+
   const db = useSQLiteContext();
 
   const tagRepository = useMemo(() => new TagRepository(db), [db]);

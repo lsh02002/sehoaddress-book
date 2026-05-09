@@ -62,45 +62,84 @@ export function ContactListScreen() {
 
   const renderItem = ({ item }: { item: Contact }) => {
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate("ContactForm", { id: item.id })}
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.name}>{item.name}</Text>
-
-          <TouchableOpacity onPress={() => onToggleFavorite(item)}>
-            <Text style={styles.favorite}>{item.isFavorite ? "★" : "☆"}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {!!item.phones[0]?.phoneNumber && (
-          <Text style={styles.text}>{item.phones[0].phoneNumber}</Text>
-        )}
-
-        {!!item.emails[0]?.emailAddress && (
-          <Text style={styles.text}>{item.emails[0].emailAddress}</Text>
-        )}
-
-        {!!item.addresses[0]?.addressLine1 && (
-          <Text style={styles.text}>{item.addresses[0].addressLine1}</Text>
-        )}
-
-        {item.tags.length > 0 && (
-          <Text style={styles.memo}>#{item.tags.join(" #")}</Text>
-        )}
-
-        {item.groups.length > 0 && (
-          <Text style={styles.memo}>그룹: {item.groups.join(", ")}</Text>
-        )}
-
+      <>
         <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => onDelete(item.id)}
+          style={styles.card}
+          onPress={() => navigation.navigate("ContactForm", { id: item.id })}
         >
-          <Text style={styles.deleteButtonText}>삭제</Text>
+          <View style={styles.cardHeader}>
+            <Text style={styles.name}>{item.name}</Text>
+            <View style={{ flexDirection: "row" }}>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("AddressInput", { contactId: item.id })
+                }
+              >
+                <Text style={styles.menuText}>주소추가</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("EmailInput", { contactId: item.id })
+                }
+              >
+                <Text style={styles.menuText}>이메일추가</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("GroupInput", { contactId: item.id })
+                }
+              >
+                <Text style={styles.menuText}>그룹추가</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("PhoneInput", { contactId: item.id })
+                }
+              >
+                <Text style={styles.menuText}>전화번호추가</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("TagInput", { contactId: item.id })
+                }
+              >
+                <Text style={styles.menuText}>태크추가</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={() => onToggleFavorite(item)}>
+              <Text style={styles.favorite}>{item.isFavorite ? "★" : "☆"}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {!!item.phones[0]?.phoneNumber && (
+            <Text style={styles.text}>{item.phones[0].phoneNumber}</Text>
+          )}
+
+          {!!item.emails[0]?.emailAddress && (
+            <Text style={styles.text}>{item.emails[0].emailAddress}</Text>
+          )}
+
+          {!!item.addresses[0]?.addressLine1 && (
+            <Text style={styles.text}>{item.addresses[0].addressLine1}</Text>
+          )}
+
+          {item.tags.length > 0 && (
+            <Text style={styles.memo}>#{item.tags.join(" #")}</Text>
+          )}
+
+          {item.groups.length > 0 && (
+            <Text style={styles.memo}>그룹: {item.groups.join(", ")}</Text>
+          )}
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => onDelete(item.id)}
+          >
+            <Text style={styles.deleteButtonText}>삭제</Text>
+          </TouchableOpacity>
         </TouchableOpacity>
-      </TouchableOpacity>
+      </>
     );
   };
 
@@ -168,6 +207,14 @@ const styles = StyleSheet.create({
 
   favorite: {
     fontSize: 24,
+  },
+
+  menuText: {
+    fontSize: 16,
+    padding: 16,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 12,
+    margin: 8,
   },
 
   text: {

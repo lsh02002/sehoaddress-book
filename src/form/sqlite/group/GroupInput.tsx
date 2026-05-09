@@ -15,13 +15,16 @@ import TextInput from "../../input/TextInput";
 import SelectInput, { Option } from "../../input/SelectInput";
 
 import { GroupRepository } from "../../../repositories/group/GroupRepository";
+import { useRoute } from "@react-navigation/native";
 
 type Props = {
-  contactId?: number;
   onSaved?: () => void;
 };
 
-const GroupInput = ({ contactId, onSaved }: Props) => {
+const GroupInput = ({ onSaved }: Props) => {
+  const route = useRoute<any>();
+  const { contactId } = route.params;
+
   const db = useSQLiteContext();
 
   const groupRepository = useMemo(() => new GroupRepository(db), [db]);

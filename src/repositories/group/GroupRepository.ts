@@ -12,6 +12,7 @@ export type GroupInput = {
   name: string;
   description?: string;
   color?: string;
+  createdAt?: string;
 };
 
 export class GroupRepository {

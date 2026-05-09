@@ -33,8 +33,8 @@ export function ContactFormScreen() {
 
   const contactId = route.params?.id;
 
-  const [name, setName] = useState("");
-  const [nickname, setNickname] = useState("");
+  const [name, setName] = useState("이세호");
+  const [nickname, setNickname] = useState("lsh02002");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
@@ -123,80 +123,85 @@ export function ContactFormScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 40,
-      }}
-    >
-      {/*"저혼자 쓸거기 때문에... 설정을 여러가지 방법으로 해보세요"*/}
-      <TwoDiv>
-        <TextInput
-          disabled
-          name="name"
-          title="이름"
-          data="이세호"
-          setData={() => {}}
-        />
-        <TextInput
-          disabled
-          name="nickname"
-          title="닉네임"
-          data="lsh02002"
-          setData={() => {}}
-        />
-      </TwoDiv>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{
+          paddingBottom: 40,
+        }}
+      >
+        <Text style={{ fontSize: 16, color: "red" }}>
+          저장만 먼저 누르고 나머지 추가하세요
+        </Text>
+        {/*"저혼자 쓸거기 때문에... 설정을 여러가지 방법으로 해보세요"*/}
+        <TwoDiv>
+          <TextInput
+            disabled
+            name="name"
+            title="이름"
+            data="이세호"
+            setData={setName}
+          />
+          <TextInput
+            disabled
+            name="nickname"
+            title="닉네임"
+            data="lsh02002"
+            setData={setNickname}
+          />
+        </TwoDiv>
 
-      <TwoDiv>
+        <TwoDiv>
+          <SelectInput
+            name="phone"
+            title="전화번호"
+            value={phone}
+            setValue={setPhone}
+            options={phoneOptions}
+          />
+
+          <SelectInput
+            name="email"
+            title="이메일"
+            value={email}
+            setValue={setEmail}
+            options={emailOptions}
+          />
+        </TwoDiv>
+
         <SelectInput
-          name="phone"
-          title="전화번호"
-          value={phone}
-          setValue={setPhone}
-          options={phoneOptions}
+          name="address"
+          title="주소"
+          value={address}
+          setValue={setAddress}
+          options={addressOptions}
         />
 
-        <SelectInput
-          name="email"
-          title="이메일"
-          value={email}
-          setValue={setEmail}
-          options={emailOptions}
-        />
-      </TwoDiv>
+        <TwoDiv>
+          <SelectArrayInput
+            name="tag"
+            title="태그"
+            values={tags}
+            setValues={setTags}
+            options={tagOptions}
+          />
 
-      <SelectInput
-        name="address"
-        title="주소"
-        value={address}
-        setValue={setAddress}
-        options={addressOptions}
-      />
+          <SelectArrayInput
+            name="group"
+            title="그룹"
+            values={groups}
+            setValues={setGroups}
+            options={groupOptions}
+          />
+        </TwoDiv>
 
-      <TwoDiv>
-        <SelectArrayInput
-          name="tag"
-          title="태그"
-          values={tags}
-          setValues={setTags}
-          options={tagOptions}
-        />
+        <TextInput name="memo" title="메모" data={memo} setData={setMemo} />
 
-        <SelectArrayInput
-          name="group"
-          title="그룹"
-          values={groups}
-          setValues={setGroups}
-          options={groupOptions}
-        />
-      </TwoDiv>
-
-      <TextInput name="memo" title="메모" data={memo} setData={setMemo} />
-
-      <TouchableOpacity style={styles.saveButton} onPress={onSave}>
-        <Text style={styles.saveButtonText}>저장</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+          <Text style={styles.saveButtonText}>저장</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </>
   );
 }
 

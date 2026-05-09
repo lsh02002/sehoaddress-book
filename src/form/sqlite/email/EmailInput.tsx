@@ -15,13 +15,16 @@ import SelectInput, { Option } from "../../input/SelectInput";
 import CheckboxInput from "../../input/CheckboxInput";
 
 import { EmailRepository } from "../../../repositories/email/EmailRepository";
+import { useRoute } from "@react-navigation/native";
 
 type Props = {
-  contactId: number;
   onSaved?: () => void;
 };
 
-const EmailInput = ({ contactId, onSaved }: Props) => {
+const EmailInput = ({ onSaved }: Props) => {
+  const route = useRoute<any>();
+  const { contactId } = route.params;
+
   const db = useSQLiteContext();
 
   const emailRepository = useMemo(() => new EmailRepository(db), [db]);

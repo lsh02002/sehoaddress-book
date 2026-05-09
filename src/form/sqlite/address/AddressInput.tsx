@@ -16,13 +16,18 @@ import SelectInput, { Option } from "../../input/SelectInput";
 import CheckboxInput from "../../input/CheckboxInput";
 
 import { AddressRepository } from "../../../repositories/address/AddressRepository";
+import {  
+  useRoute,
+} from "@react-navigation/native";
 
-type Props = {
-  contactId: number;
+type Props = {  
   onSaved?: () => void;
 };
 
-const AddressInput = ({ contactId, onSaved }: Props) => {
+const AddressInput = ({ onSaved }: Props) => {
+  const route = useRoute<any>();
+  const { contactId } = route.params;
+
   const db = useSQLiteContext();
 
   const addressRepository = useMemo(() => new AddressRepository(db), [db]);

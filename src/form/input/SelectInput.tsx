@@ -2,9 +2,18 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
 import { colors } from "../../themes/theme";
 import { FieldLabel, FieldWrapper } from "./field";
 
@@ -36,20 +45,40 @@ const SelectInput = forwardRef<SelectInputRef, Props>(
     { disabled, title, value, setValue, options, placeholder, onPressNext },
     ref,
   ) => {
+    const triggerRef = useRef<View>(null);
+
     const [open, setOpen] = useState(false);
+
+    const [layout, setLayout] = useState({
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+    });
 
     const selectedLabel = useMemo(
       () => options.find((opt) => opt.value === value)?.label,
       [options, value],
     );
 
+    const openSelect = () => {
+      if (disabled) return;
+
+      triggerRef.current?.measureInWindow((x, y, width, height) => {
+        setLayout({
+          x,
+          y,
+          width,
+          height,
+        });
+
+        setOpen(true);
+      });
+    };
+
     useImperativeHandle(ref, () => ({
-      focus: () => {
-        if (!disabled) setOpen(true);
-      },
-      open: () => {
-        if (!disabled) setOpen(true);
-      },
+      focus: openSelect,
+      open: openSelect,
       close: () => setOpen(false),
     }));
 
@@ -58,11 +87,10 @@ const SelectInput = forwardRef<SelectInputRef, Props>(
         <FieldLabel title={title} />
 
         <Pressable
+          ref={triggerRef}
           disabled={disabled}
-          focusable={true}
-          onPress={() => {
-            if (!disabled) setOpen(true);
-          }}
+          focusable
+          onPress={openSelect}
           style={[styles.trigger, disabled && styles.disabled]}
         >
           <Text style={!value ? styles.placeholder : styles.valueText}>
@@ -70,6 +98,7 @@ const SelectInput = forwardRef<SelectInputRef, Props>(
               ? `${title}이(가) 비어있습니다.`
               : (selectedLabel ?? placeholder ?? `${title}을(를) 선택하세요`)}
           </Text>
+
           <Text style={styles.chevron}>▾</Text>
         </Pressable>
 
@@ -80,11 +109,28 @@ const SelectInput = forwardRef<SelectInputRef, Props>(
           onRequestClose={() => setOpen(false)}
         >
           <Pressable style={styles.overlay} onPress={() => setOpen(false)}>
-            <Pressable style={styles.sheet} onPress={() => undefined}>
-              <Text style={styles.sheetTitle}>{title}</Text>
+            <Pressable
+              style={[
+                styles.dropdown,
+                {
+                  top: layout.y + layout.height + 24,
+                  left: layout.x,
+                  width: layout.width,
+                },
+              ]}
+              onPress={() => undefined}
+            >
               <ScrollView>
+                {options.length === 0 && (
+                  <View style={styles.emptyWrap}>
+                    <Text
+                      style={styles.emptyText}
+                    >{`해당 ${title}이(가) 없습니다`}</Text>
+                  </View>
+                )}
                 {options.map((opt) => {
                   const selected = value === opt.value;
+
                   return (
                     <Pressable
                       key={opt.value}
@@ -99,9 +145,7 @@ const SelectInput = forwardRef<SelectInputRef, Props>(
                         selected && styles.optionSelected,
                         opt.disabled && styles.disabled,
                       ]}
-                    >
-                      <Text style={styles.optionText}>{opt.label}</Text>
-                    </Pressable>
+                    />
                   );
                 })}
               </ScrollView>
@@ -126,35 +170,73 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  placeholder: { color: colors.muted },
-  valueText: { color: colors.text },
-  chevron: { color: colors.muted, fontSize: 16 },
+
+  placeholder: {
+    color: colors.muted,
+  },
+
+  valueText: {
+    color: colors.text,
+  },
+
+  chevron: {
+    color: colors.muted,
+    fontSize: 16,
+  },
+
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: "center",
-    padding: 16,
+    backgroundColor: "transparent",
   },
-  sheet: {
-    maxHeight: "70%",
-    borderRadius: 20,
+
+  dropdown: {
+    position: "absolute",
+    maxHeight: 260,
+    borderRadius: 12,
     backgroundColor: colors.background,
-    padding: 16,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
+
   sheetTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: colors.text,
-    marginBottom: 12,
+    marginBottom: 8,
+    paddingHorizontal: 8,
+    paddingTop: 4,
   },
+
   option: {
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 12,
   },
-  optionSelected: { backgroundColor: colors.primarySoft },
-  optionText: { color: colors.text },
-  disabled: { opacity: 0.5 },
+
+  optionSelected: {
+    backgroundColor: colors.primarySoft,
+  },
+
+  optionText: {
+    color: colors.text,
+  },
+
+  disabled: {
+    opacity: 0.5,
+  },
+  emptyWrap: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
 });
 
 export default SelectInput;

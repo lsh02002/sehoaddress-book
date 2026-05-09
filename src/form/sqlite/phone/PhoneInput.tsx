@@ -14,13 +14,16 @@ import { TwoDiv } from "../../input/TwoDiv";
 import SelectInput, { Option } from "../../input/SelectInput";
 import CheckboxInput from "../../input/CheckboxInput";
 import { PhoneRepository } from "../../../repositories/phone/PhoneRepository";
+import { useRoute } from "@react-navigation/native";
 
 type Props = {
-  contactId: number;
   onSaved?: () => void;
 };
 
-const PhoneInput = ({ contactId, onSaved }: Props) => {
+const PhoneInput = ({ onSaved }: Props) => {
+  const route = useRoute<any>();
+  const { contactId } = route.params;
+
   const db = useSQLiteContext();
 
   const phoneRepository = useMemo(() => new PhoneRepository(db), [db]);
@@ -30,6 +33,8 @@ const PhoneInput = ({ contactId, onSaved }: Props) => {
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const [isPrimary, setIsPrimary] = useState(false);
+
+  const now = new Date().toISOString();
 
   const [loading, setLoading] = useState(false);
 
@@ -67,6 +72,7 @@ const PhoneInput = ({ contactId, onSaved }: Props) => {
         phoneType,
         phoneNumber,
         isPrimary,
+        createdAt: now,
       });
 
       Alert.alert("저장 완료", "전화번호가 저장되었습니다.");

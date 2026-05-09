@@ -6,6 +6,7 @@ export type EmailInput = {
   emailType?: string;
   emailAddress: string;
   isPrimary?: boolean;
+  createdAt?: string;
 };
 
 export class EmailRepository {
