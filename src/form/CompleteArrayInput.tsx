@@ -7,15 +7,14 @@ import React, {
   forwardRef,
 } from "react";
 import {
-  ActivityIndicator,  
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { colors } from "../../themes/theme";
-import { FieldLabel, FieldWrapper } from "./field";
+import { colors } from "../themes/theme";
 
 type Option = { id: string; name: string };
 
@@ -45,7 +44,7 @@ export const CompleteArrayInput = forwardRef<
       fetchOptions,
       createOption,
       hydrateSelected,
-      placeholder = "추가...",
+      placeholder = " 추가...",
       debounceMs = 250,
       onError,
     },
@@ -53,23 +52,40 @@ export const CompleteArrayInput = forwardRef<
   ) => {
     const [input, setInput] = useState("");
     const [options, setOptions] = useState<Option[]>([]);
-    const [loading, setLoading] = useState(false);
     const [selectedMap, setSelectedMap] = useState<Map<string, Option>>(
       () => new Map(),
     );
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [createLoading, setCreateLoading] = useState(false);
+    const requestIdRef = useRef(0);
 
     useEffect(() => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      setLoading(true);
+
+      const query = input.trim();
+
+      if (!query) {
+        setOptions([]);
+        setSearchLoading(false);
+        return;
+      }
+
       debounceRef.current = setTimeout(async () => {
+        const requestId = ++requestIdRef.current;
+
         try {
-          const list = await fetchOptions(input.trim());
+          setSearchLoading(true);
+          const list = await fetchOptions(query);
+
+          if (requestId !== requestIdRef.current) return;
           setOptions(list);
         } catch (err) {
           onError?.(err);
         } finally {
-          setLoading(false);
+          if (requestId === requestIdRef.current) {
+            setSearchLoading(false);
+          }
         }
       }, debounceMs);
 
@@ -124,12 +140,15 @@ export const CompleteArrayInput = forwardRef<
 
     const handleCreate = useCallback(async () => {
       if (!createOption) return;
+
       const nextName = input.trim();
       if (!nextName) return;
 
       try {
-        setLoading(true);
+        setCreateLoading(true);
+
         const created = await createOption(nextName);
+
         setOptions((prev) =>
           prev.some((o) => o.id === created.id) ? prev : [created, ...prev],
         );
@@ -139,7 +158,7 @@ export const CompleteArrayInput = forwardRef<
       } catch (err) {
         onError?.(err);
       } finally {
-        setLoading(false);
+        setCreateLoading(false);
       }
     }, [createOption, input, addId, onError]);
 
@@ -153,14 +172,20 @@ export const CompleteArrayInput = forwardRef<
     );
 
     return (
-      <FieldWrapper>
-        {title ? <FieldLabel title={title} /> : null}
+      <View style={styles.wrapper}>
+        {title ? <Text style={styles.label}>{title}</Text> : null}
 
         {selectedItems.length > 0 ? (
           <View style={styles.tags}>
             {selectedItems.map((item) => (
               <View key={item.id} style={styles.tag}>
-                <Text style={styles.tagText}>{item.label}</Text>
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={styles.tagText}
+                >
+                  {item.label}
+                </Text>
                 <Pressable onPress={() => removeId(item.id)}>
                   <Text style={styles.removeText}>✕</Text>
                 </Pressable>
@@ -179,13 +204,21 @@ export const CompleteArrayInput = forwardRef<
         />
 
         {createOption && input.trim() ? (
-          <Pressable style={styles.createButton} onPress={handleCreate}>
-            <Text style={styles.createText}>“{input.trim()}” 추가</Text>
+          <Pressable
+            style={styles.createButton}
+            onPress={handleCreate}
+            disabled={createLoading}
+          >
+            {createLoading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={styles.createText}>“{input.trim()}” 추가</Text>
+            )}
           </Pressable>
         ) : null}
 
         <View style={styles.menu}>
-          {loading ? <ActivityIndicator /> : null}
+          {searchLoading ? <ActivityIndicator size="small" /> : null}
 
           {options.map((item) => {
             const selected = values.includes(item.id);
@@ -202,31 +235,44 @@ export const CompleteArrayInput = forwardRef<
             );
           })}
         </View>
-      </FieldWrapper>
+      </View>
     );
   },
 );
 
 const styles = StyleSheet.create({
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 },
+  wrapper: {
+    width: "100%",
+    marginBottom: 12,
+  },
+  label: {
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  tags: { flexDirection: "row", gap: 2, marginBottom: 8, flexWrap: "wrap" },
   tag: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     backgroundColor: "#6B7280",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 999,
+
+    maxWidth: "100%",
   },
-  tagText: { color: "white" },
+  tagText: {
+    color: "white",
+    flexShrink: 1,
+  },
   removeText: { color: "white", fontSize: 12 },
   input: {
     minHeight: 44,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
     backgroundColor: colors.background,
     color: colors.text,
   },

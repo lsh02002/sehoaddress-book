@@ -1,10 +1,13 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef } from "react";
 import {
   ReturnKeyTypeOptions,
+  Text,
   TextInput as RNTextInput,
   TextInputSubmitEditingEvent,
-} from 'react-native';
-import { FieldLabel, FieldWrapper, BaseInput, fieldStyles } from './field';
+  View,
+  StyleSheet,
+} from "react-native";
+import { colors } from "../themes/theme";
 
 export type Props = {
   disabled?: boolean;
@@ -19,9 +22,9 @@ export type Props = {
 const TextInput = forwardRef<RNTextInput, Props>(
   ({ disabled, title, data, setData, returnKeyType, onSubmitEditing }, ref) => {
     return (
-      <FieldWrapper>
-        <FieldLabel title={title} />
-        <BaseInput
+      <View style={styles.wrapper}>
+        <Text style={styles.label}>{title}</Text>
+        <RNTextInput
           ref={ref}
           editable={!disabled}
           value={data}
@@ -29,11 +32,37 @@ const TextInput = forwardRef<RNTextInput, Props>(
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
           placeholder={`${title}을(를) 입력하세요`}
-          style={[fieldStyles.input, disabled && fieldStyles.disabled]}
+          style={[styles.input, disabled && styles.disabled]}
         />
-      </FieldWrapper>
+      </View>
     );
   },
 );
 
 export default TextInput;
+
+export const styles = StyleSheet.create({
+  wrapper: {
+    width: "100%",
+    marginBottom: 12,
+  },
+  label: {
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  input: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: colors.background,
+    color: colors.text,
+  },
+  disabled: {
+    opacity: 0.6,
+  },
+});

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   TouchableOpacity,
   Text,
   ScrollView,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from "react-native";
 
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
@@ -13,10 +14,9 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { RootStackParamList } from "../../App";
 import { ContactRepository } from "../repositories/ContactRepository";
-import { TwoDiv } from "../form/input/TwoDiv";
-import { Option } from "../form/input/SelectInput";
-import TextInput from "../form/input/TextInput";
-import { CompleteArrayInput } from "../form/input/CompleteArrayInput";
+import { TwoDiv } from "../form/TwoDiv";
+import TextInput from "../form/TextInput";
+import { CompleteArrayInput } from "../form/CompleteArrayInput";
 
 type RouteProps = RouteProp<RootStackParamList, "ContactForm">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -44,6 +44,8 @@ export function ContactFormScreen() {
   const [addressOptions, setAddressOptions] = useState<string[]>([]);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
   const [groupOptions, setGroupOptions] = useState<string[]>([]);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   type Option = {
     id: string;
@@ -82,6 +84,17 @@ export function ContactFormScreen() {
     setTagOptions(contact.tags ?? []);
     setGroupOptions(contact.groups ?? []);
   };
+
+  const onRefresh = useCallback(async () => {
+    if (!contactId) return;
+
+    try {
+      setRefreshing(true);
+      await loadContact(contactId);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [contactId]);
 
   const makeFetchOptions =
     (options: string[]) =>
@@ -146,6 +159,9 @@ export function ContactFormScreen() {
 
   return (
     <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
       style={styles.container}
       contentContainerStyle={{
         paddingBottom: 200,
