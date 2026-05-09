@@ -51,12 +51,11 @@ export const CompleteArrayInput = forwardRef<
     ref,
   ) => {
     const [input, setInput] = useState("");
-    const [options, setOptions] = useState<Option[]>([]);
+    const [loading, setLoading] = useState(false);
     const [selectedMap, setSelectedMap] = useState<Map<string, Option>>(
       () => new Map(),
     );
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const [searchLoading, setSearchLoading] = useState(false);
     const [createLoading, setCreateLoading] = useState(false);
     const requestIdRef = useRef(0);
 
@@ -66,8 +65,7 @@ export const CompleteArrayInput = forwardRef<
       const query = input.trim();
 
       if (!query) {
-        setOptions([]);
-        setSearchLoading(false);
+        setLoading(false);
         return;
       }
 
@@ -75,16 +73,13 @@ export const CompleteArrayInput = forwardRef<
         const requestId = ++requestIdRef.current;
 
         try {
-          setSearchLoading(true);
-          const list = await fetchOptions(query);
-
+          setLoading(true);
           if (requestId !== requestIdRef.current) return;
-          setOptions(list);
         } catch (err) {
           onError?.(err);
         } finally {
           if (requestId === requestIdRef.current) {
-            setSearchLoading(false);
+            setLoading(false);
           }
         }
       }, debounceMs);
@@ -115,15 +110,6 @@ export const CompleteArrayInput = forwardRef<
       };
     }, [values, hydrateSelected, onError]);
 
-    const toggleId = useCallback(
-      (id: string) => {
-        setValues((prev) =>
-          prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-        );
-      },
-      [setValues],
-    );
-
     const addId = useCallback(
       (id: string) => {
         setValues((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -149,9 +135,6 @@ export const CompleteArrayInput = forwardRef<
 
         const created = await createOption(nextName);
 
-        setOptions((prev) =>
-          prev.some((o) => o.id === created.id) ? prev : [created, ...prev],
-        );
         addId(created.id);
         setSelectedMap((prev) => new Map(prev).set(created.id, created));
         setInput("");
@@ -216,25 +199,6 @@ export const CompleteArrayInput = forwardRef<
             )}
           </Pressable>
         ) : null}
-
-        <View style={styles.menu}>
-          {searchLoading ? <ActivityIndicator size="small" /> : null}
-
-          {options.map((item) => {
-            const selected = values.includes(item.id);
-
-            return (
-              <Pressable
-                key={item.id}
-                onPress={() => toggleId(item.id)}
-                style={[styles.option, selected && styles.optionSelected]}
-              >
-                <Text style={styles.optionText}>{item.name}</Text>
-                {selected ? <Text style={styles.selectedMark}>✓</Text> : null}
-              </Pressable>
-            );
-          })}
-        </View>
       </View>
     );
   },
@@ -295,7 +259,4 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
-  optionSelected: { backgroundColor: colors.primarySoft },
-  optionText: { color: colors.text },
-  selectedMark: { color: colors.primary, fontWeight: "700" },
 });
