@@ -94,7 +94,7 @@ export const CompleteArrayInput = forwardRef<
 
     const handleAdd = useCallback(async () => {
       const name = input.trim();
-      if (!name) return;
+      if (!name || loading) return;
 
       try {
         setLoading(true);
@@ -127,13 +127,16 @@ export const CompleteArrayInput = forwardRef<
       } finally {
         setLoading(false);
       }
-    }, [input, createOption, setValues, onError]);
+    }, [input, loading, createOption, setValues, onError]);
 
     return (
       <View style={styles.wrapper}>
         {title ? <Text style={styles.label}>{title}</Text> : null}
 
-        <Pressable style={styles.field} onPress={() => setModalVisible(true)}>
+        <Pressable
+          style={({ pressed }) => [styles.field, pressed && styles.pressed]}
+          onPress={() => setModalVisible(true)}
+        >
           <View style={styles.fieldTextBox}>
             <Text style={styles.fieldTitle}>
               {selectedItems.length > 0
@@ -141,16 +144,16 @@ export const CompleteArrayInput = forwardRef<
                 : placeholder}
             </Text>
 
-            {selectedItems.length > 0 ? (
-              <Text numberOfLines={1} style={styles.previewText}>
-                {selectedItems.map((item) => item.label).join(", ")}
-              </Text>
-            ) : (
-              <Text style={styles.previewText}>눌러서 입력</Text>
-            )}
+            <Text numberOfLines={1} style={styles.previewText}>
+              {selectedItems.length > 0
+                ? selectedItems.map((item) => item.label).join(", ")
+                : "눌러서 입력"}
+            </Text>
           </View>
 
-          <Text style={styles.plusText}>＋</Text>
+          <View style={styles.plusCircle}>
+            <Text style={styles.plusText}>＋</Text>
+          </View>
         </Pressable>
 
         <Modal
@@ -162,9 +165,21 @@ export const CompleteArrayInput = forwardRef<
           <View style={styles.modalDim}>
             <View style={styles.modalBox}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{title ?? "항목 입력"}</Text>
+                <View style={styles.modalTitleBox}>
+                  <Text style={styles.modalTitle}>{title ?? "항목 입력"}</Text>
+                  <Text style={styles.modalSubtitle}>
+                    원하는 항목을 추가해 주세요
+                  </Text>
+                </View>
 
-                <Pressable onPress={() => setModalVisible(false)}>
+                <Pressable
+                  hitSlop={10}
+                  style={({ pressed }) => [
+                    styles.closeButton,
+                    pressed && styles.pressed,
+                  ]}
+                  onPress={() => setModalVisible(false)}
+                >
                   <Text style={styles.closeIcon}>✕</Text>
                 </Pressable>
               </View>
@@ -175,7 +190,7 @@ export const CompleteArrayInput = forwardRef<
                   value={input}
                   onChangeText={setInput}
                   placeholder={placeholder}
-                  placeholderTextColor={colors.text + "80"}
+                  placeholderTextColor={colors.text + "66"}
                   style={styles.input}
                   autoFocus
                   returnKeyType="done"
@@ -183,15 +198,16 @@ export const CompleteArrayInput = forwardRef<
                 />
 
                 <Pressable
-                  style={[
+                  style={({ pressed }) => [
                     styles.addButton,
                     !input.trim() && styles.addButtonDisabled,
+                    pressed && input.trim() && !loading && styles.pressed,
                   ]}
                   onPress={handleAdd}
                   disabled={!input.trim() || loading}
                 >
                   {loading ? (
-                    <ActivityIndicator size="small" />
+                    <ActivityIndicator size="small" color="#fff" />
                   ) : (
                     <Text style={styles.addText}>추가</Text>
                   )}
@@ -211,7 +227,10 @@ export const CompleteArrayInput = forwardRef<
                           {item.label}
                         </Text>
 
-                        <Pressable onPress={() => removeId(item.id)}>
+                        <Pressable
+                          hitSlop={8}
+                          onPress={() => removeId(item.id)}
+                        >
                           <Text style={styles.removeText}>✕</Text>
                         </Pressable>
                       </View>
@@ -219,6 +238,7 @@ export const CompleteArrayInput = forwardRef<
                   </View>
                 ) : (
                   <View style={styles.emptyBox}>
+                    <Text style={styles.emptyIcon}>＋</Text>
                     <Text style={styles.emptyText}>
                       아직 추가된 항목이 없습니다.
                     </Text>
@@ -227,7 +247,10 @@ export const CompleteArrayInput = forwardRef<
               </View>
 
               <Pressable
-                style={styles.doneButton}
+                style={({ pressed }) => [
+                  styles.doneButton,
+                  pressed && styles.pressed,
+                ]}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.doneText}>완료</Text>
@@ -240,153 +263,242 @@ export const CompleteArrayInput = forwardRef<
   },
 );
 
+CompleteArrayInput.displayName = "CompleteArrayInput";
+
 const styles = StyleSheet.create({
   wrapper: {
     width: "100%",
     marginBottom: 12,
   },
+
   label: {
     marginBottom: 8,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.text,
   },
+
   field: {
-    minHeight: 56,
+    minHeight: 60,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: colors.background,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   fieldTextBox: {
     flex: 1,
     marginRight: 12,
   },
+
   fieldTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: colors.text,
   },
+
   previewText: {
     marginTop: 4,
     fontSize: 12,
-    color: colors.text,
-    opacity: 0.6,
+    color: colors.text + "99",
   },
+
+  plusCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primary + "14",
+  },
+
   plusText: {
     fontSize: 22,
     color: colors.primary,
-    fontWeight: "600",
+    fontWeight: "800",
+    lineHeight: 24,
   },
+
   modalDim: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     paddingHorizontal: 20,
   },
+
   modalBox: {
-    maxHeight: "80%",
+    maxHeight: "82%",
     backgroundColor: colors.background,
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
   },
+
   modalHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 18,
   },
+
+  modalTitleBox: {
+    flex: 1,
+    paddingRight: 12,
+  },
+
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "800",
     color: colors.text,
   },
+
+  modalSubtitle: {
+    marginTop: 4,
+    fontSize: 13,
+    color: colors.text + "99",
+  },
+
+  closeButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.text + "10",
+  },
+
   closeIcon: {
-    fontSize: 18,
-    color: colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.text + "99",
   },
+
   inputRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 18,
   },
+
   input: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 48,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    borderColor: colors.text + "12",
+    borderRadius: 14,
+    backgroundColor: colors.text + "08",
+    paddingHorizontal: 14,
     color: colors.text,
+    fontSize: 15,
   },
+
   addButton: {
-    minWidth: 64,
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-  addButtonDisabled: {
-    opacity: 0.4,
-  },
-  addText: {
-    color: "white",
-    fontWeight: "700",
-  },
-  modalContent: {
-    minHeight: 120,
-  },
-  tags: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  tag: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#6B7280",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    maxWidth: "100%",
-  },
-  tagText: {
-    color: "white",
-    flexShrink: 1,
-  },
-  removeText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  emptyBox: {
-    minHeight: 120,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyText: {
-    color: colors.text,
-    opacity: 0.5,
-  },
-  doneButton: {
-    marginTop: 16,
+    minWidth: 72,
     height: 48,
     borderRadius: 14,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 14,
   },
-  doneText: {
-    color: "white",
-    fontWeight: "700",
+
+  addButtonDisabled: {
+    backgroundColor: colors.text + "20",
+  },
+
+  addText: {
+    color: "#fff",
     fontSize: 15,
+    fontWeight: "800",
+  },
+
+  modalContent: {
+    minHeight: 120,
+    maxHeight: 260,
+    marginBottom: 18,
+  },
+
+  tags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  tag: {
+    maxWidth: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 9,
+    paddingLeft: 13,
+    paddingRight: 10,
+    borderRadius: 999,
+    backgroundColor: colors.primary + "14",
+    borderWidth: 1,
+    borderColor: colors.primary + "22",
+  },
+
+  tagText: {
+    maxWidth: 220,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    flexShrink: 1,
+  },
+
+  removeText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.text + "88",
+  },
+
+  emptyBox: {
+    flex: 1,
+    minHeight: 120,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.text + "06",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.text + "18",
+  },
+
+  emptyIcon: {
+    fontSize: 24,
+    color: colors.text + "55",
+    marginBottom: 6,
+  },
+
+  emptyText: {
+    fontSize: 14,
+    color: colors.text + "88",
+  },
+
+  doneButton: {
+    height: 52,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.text,
+  },
+
+  doneText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  pressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
   },
 });
